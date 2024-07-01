@@ -17,10 +17,10 @@ type RepaColor struct {
 var NoColor = RepaColor{}
 
 func (col RepaColor) RGBA() (r, g, b, a uint32) {
-	r = uint32(col.R * 0xffff + 0.5)
-	g = uint32(col.G * 0xffff + 0.5)
-	b = uint32(col.B * 0xffff + 0.5)
-	a = uint32(col.A * 0xffff + 0.5)
+	r = uint32(col.R*0xffff + 0.5)
+	g = uint32(col.G*0xffff + 0.5)
+	b = uint32(col.B*0xffff + 0.5)
+	a = uint32(col.A*0xffff + 0.5)
 	return
 }
 
@@ -42,8 +42,8 @@ func MakeColor(col color.Color) RepaColor {
 }
 
 func ParseColor(cstr string) (RepaColor, error) {
-	// hexa color
 	if strings.HasPrefix(cstr, "#") {
+		// hexa color
 		if len(cstr) == 7 || len(cstr) == 4 {
 			c, err := colorful.Hex(cstr)
 			if err != nil {
@@ -73,6 +73,61 @@ func ParseColor(cstr string) (RepaColor, error) {
 			}
 			return RepaColor{c, float64(a) / 15}, nil
 		}
+	} else if strings.HasPrefix(cstr, "rgb") {
+		// rgb color
+		var r, g, b uint8
+
+		// transform commas/slashes to spaces to support legacy rgb() syntax
+		cstr = strings.Replace(cstr, "rgba", "rgb", 1)
+		cstr = strings.ReplaceAll(cstr, ",", " ")
+		cstr = strings.Replace(cstr, "/", " ", 1)
+
+		// CSS rgb() (simple)
+		n, err := fmt.Sscanf(cstr, "rgb(%d %d %d)", &r, &g, &b)
+		if err == nil && n == 3 {
+			return RepaColor{
+					colorful.Color{
+						R: float64(r) / 255,
+						G: float64(g) / 255,
+						B: float64(b) / 255,
+					},
+					1.0,
+				},
+				nil
+		}
+
+		// CSS rgb() with alpha (as float)
+		var a float64
+		n, err = fmt.Sscanf(cstr, "rgb(%d %d %d %f)", &r, &g, &b, &a)
+		if err == nil && n == 4 {
+			return RepaColor{
+					colorful.Color{
+						R: float64(r) / 255,
+						G: float64(g) / 255,
+						B: float64(b) / 255,
+					},
+					a,
+				},
+				nil
+		}
+
+		// CSS rgb() with alpha (as percent)
+		var aperc uint8
+		n, err = fmt.Sscanf(cstr, "rgb(%d %d %d %d%%)", &r, &g, &b, &aperc)
+		if err == nil && n == 4 {
+			return RepaColor{
+					colorful.Color{
+						R: float64(r) / 255,
+						G: float64(g) / 255,
+						B: float64(b) / 255,
+					},
+					float64(aperc) / 100,
+				},
+				nil
+		}
+
+		// TODO `from` support
 	}
+
 	return NoColor, errors.New("cannot parse color")
 }
