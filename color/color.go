@@ -3,6 +3,7 @@ package color
 import (
 	"fmt"
 	"image/color"
+	"math"
 
 	"github.com/lucasb-eyer/go-colorful"
 )
@@ -13,15 +14,20 @@ type RepaColor struct {
 }
 
 var NoColor = RepaColor{}
+var BLACK = RepaColor{colorful.Color{R: 0, G: 0, B: 0}, 1}
+var WHITE = RepaColor{colorful.Color{R: 1, G: 1, B: 1}, 1}
+var GRAY = RepaColor{colorful.Color{R: .5, G: .5, B: .5}, 1}
+var DARKGRAY = RepaColor{colorful.Color{R: .25, G: .25, B: .25}, 1}
+var LIGHTGRAY = RepaColor{colorful.Color{R: .75, G: .75, B: .75}, 1}
 
-const delta = 1.0 / 256.0
+const Delta = colorful.Delta
 
 func almosteq_eps(a, b, eps float64) bool {
 	return a-b < eps && b-a < eps
 }
 
 func almosteq(a, b float64) bool {
-	return almosteq_eps(a, b, delta)
+	return almosteq_eps(a, b, Delta)
 }
 
 func formatFloat(f float64) string {
@@ -32,9 +38,9 @@ func formatFloat(f float64) string {
 }
 
 func (col RepaColor) RGBA() (r, g, b, a uint32) {
-	r = uint32(col.R*0xffff + 0.5)
-	g = uint32(col.G*0xffff + 0.5)
-	b = uint32(col.B*0xffff + 0.5)
+	r = uint32(col.A*col.R*0xffff + 0.5)
+	g = uint32(col.A*col.G*0xffff + 0.5)
+	b = uint32(col.A*col.B*0xffff + 0.5)
 	a = uint32(col.A*0xffff + 0.5)
 	return
 }
@@ -68,17 +74,17 @@ func (col RepaColor) HslString() string {
 func (col RepaColor) LabString() string {
 	l, a, b := col.Lab()
 	if (col.A == 1) {
-		return fmt.Sprintf("lab(%.4g%% %.4g %.4g)", l*100, a*100, b*100)
+		return fmt.Sprintf("lab(%s%% %s %s)", formatFloat(l*100), formatFloat(a*100), formatFloat(b*100))
 	}
-	return fmt.Sprintf("lab(%.4g%% %.4g %.4g / %s)", l*100, a*100, b*100, formatFloat(col.A))
+	return fmt.Sprintf("lab(%s%% %s %s / %s)", formatFloat(l*100), formatFloat(a*100), formatFloat(b*100), formatFloat(col.A))
 }
 
 func (col RepaColor) LchString() string {
 	h, c, l := col.Hcl()
 	if (col.A == 1) {
-		return fmt.Sprintf("lch(%.4g%% %.4g %.4g)", l*100, c*100, h)
+		return fmt.Sprintf("lch(%s%% %s %s)", formatFloat(l*100), formatFloat(c*100), formatFloat(h))
 	}
-	return fmt.Sprintf("lch(%.4g%% %.4g %.4g / %s)", l*100, c*100, h, formatFloat(col.A))
+	return fmt.Sprintf("lch(%s%% %s %s / %s)", formatFloat(l*100), formatFloat(c*100), formatFloat(h), formatFloat(col.A))
 }
 
 func (col RepaColor) OkLabString() string {
@@ -103,6 +109,51 @@ func (col RepaColor) XyzString() string {
 		return fmt.Sprintf("xyz(%.4g %.4g %.4g)", x, y, z)
 	}
 	return fmt.Sprintf("xyz(%.4g %.4g %.4g / %s)", x, y, z, formatFloat(col.A))
+}
+
+func (col RepaColor) Luminance() float64 {
+	return 0.21263900587151036*col.R + 0.71516867876775593*col.G + 0.072192315360733715*col.B
+}
+
+func (col RepaColor) ContrastRatio(c2 RepaColor) float64 {
+	l1 := col.Luminance()
+	l2 := c2.Luminance()
+	if l1 > l2 {
+		return (l1 + 0.05) / (l2 + 0.05)
+	}
+	return (l2 + 0.05) / (l1 + 0.05)
+}
+
+func (col RepaColor) A11YPair() RepaColor {
+	// (x + .05) / 0.05 = 1.05 / (x + .05) => 0.179
+	if col.Luminance() > 0.179 {
+		return BLACK
+	}
+	return WHITE
+}
+
+// Blend two colors based on their alpha value 
+// `gamma` is the gamma correction value, default is 2.2
+func (col RepaColor) AlphaBlendRgb(c2 RepaColor, gamma float64) RepaColor {
+	a1 := col.A
+	a2 := c2.A
+	a := a1 + a2*(1-a1)
+	if a == 0 {
+		return NoColor
+	}
+
+	if gamma == 0 {
+		gamma = 2.2
+	}
+
+	return RepaColor{
+		colorful.Color{
+			R: math.Pow(math.Pow(col.R, gamma)*a1 + math.Pow(c2.R, gamma)*a2*(1-a1), 1/gamma),
+			G: math.Pow(math.Pow(col.G, gamma)*a1 + math.Pow(c2.G, gamma)*a2*(1-a1), 1/gamma),
+			B: math.Pow(math.Pow(col.B, gamma)*a1 + math.Pow(c2.B, gamma)*a2*(1-a1), 1/gamma),
+		},
+		a,
+	}
 }
 
 func MakeColor(col color.Color) RepaColor {
