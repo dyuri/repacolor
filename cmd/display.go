@@ -38,6 +38,24 @@ Supported formats:
 		case "rgb":
 			fmt.Println(c.RgbString())
 			return
+		case "hsl":
+			fmt.Println(c.HslString())
+			return
+		case "lab":
+			fmt.Println(c.LabString())
+			return
+		case "lch":
+			fmt.Println(c.LchString())
+			return
+		case "oklab":
+			fmt.Println(c.OkLabString())
+			return
+		case "oklch":
+			fmt.Println(c.OkLchString())
+			return
+		case "xyz":
+			fmt.Println(c.XyzString())
+			return
 		}
 
 		// Print the color
@@ -46,7 +64,7 @@ Supported formats:
 }
 
 func init() {
-	displayCmd.Flags().StringVarP(&format, "format", "f", "", "Output format (hex, rgb)")
+	displayCmd.Flags().StringVarP(&format, "format", "f", "", "Output format (hex, rgb, hsl, lab, lch, oklab, oklch)")
 
 	rootCmd.AddCommand(displayCmd)
 }

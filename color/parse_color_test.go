@@ -7,16 +7,6 @@ import (
 	"testing"
 )
 
-const delta = 1.0 / 256.0
-
-func almosteq_eps(a, b, eps float64) bool {
-	return a-b < eps && b-a < eps
-}
-
-func almosteq(a, b float64) bool {
-	return almosteq_eps(a, b, delta)
-}
-
 // ParseColor //
 ////////////////
 
@@ -127,3 +117,4 @@ func TestParseRgbaColor(t *testing.T) {
 	}
 }
 
+// switched to mazznoer/csscolorparser, so this test is no longer needed, but I keep it none the less
