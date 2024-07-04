@@ -1,17 +1,29 @@
 package color
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 
 	"github.com/mazznoer/csscolorparser"
 )
 
-func ParseColor(cstr string) (RepaColor, error) {
+func ParseColor(cstr string, usefallback bool) (col RepaColor, err error) {
+	col = NOCOLOR
 	c, err := csscolorparser.Parse(cstr)
 
 	if err == nil {
-		return MakeColor(c), nil
+		col = MakeColor(c)
+	} else if (usefallback) {
+		hash := md5.Sum([]byte(cstr))
+		strhash := hex.EncodeToString(hash[:])
+		c, err = csscolorparser.Parse("#" + strhash[:6])
+		if err == nil {
+			col = MakeColor(c)
+		}
+	} else {
+		err = errors.New("cannot parse color")
 	}
 
-	return NoColor, errors.New("cannot parse color")
+	return
 }

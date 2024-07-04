@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var nofallback bool
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "repacolor",
@@ -29,6 +31,8 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
+
+	rootCmd.PersistentFlags().BoolVar(&nofallback, "nofallback", false, "Don't fall back to deterministic random colors if input cannot be parsed")
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.repacolor.yaml)")
 

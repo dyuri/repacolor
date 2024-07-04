@@ -13,7 +13,7 @@ type RepaColor struct {
 	A float64
 }
 
-var NoColor = RepaColor{}
+var NOCOLOR = RepaColor{}
 var BLACK = RepaColor{colorful.Color{R: 0, G: 0, B: 0}, 1}
 var WHITE = RepaColor{colorful.Color{R: 1, G: 1, B: 1}, 1}
 var GRAY = RepaColor{colorful.Color{R: .5, G: .5, B: .5}, 1}
@@ -45,11 +45,27 @@ func (col RepaColor) RGBA() (r, g, b, a uint32) {
 	return
 }
 
+func (col RepaColor) RGB256() (r, g, b uint8) {
+	r = uint8(col.R*255.0 + 0.5)
+	g = uint8(col.G*255.0 + 0.5)
+	b = uint8(col.B*255.0 + 0.5)
+	return
+}
+
+func (col RepaColor) RGBA256() (r, g, b, a uint8) {
+	r = uint8(col.R*255.0 + 0.5)
+	g = uint8(col.G*255.0 + 0.5)
+	b = uint8(col.B*255.0 + 0.5)
+	a = uint8(col.A*255.0 + 0.5)
+	return
+}
+
 func (col RepaColor) Hex() string {
+	r, g, b, a := col.RGBA256()
 	if col.A == 1 {
-		return fmt.Sprintf("#%02x%02x%02x", uint8(col.R*255.0+0.5), uint8(col.G*255.0+0.5), uint8(col.B*255.0+0.5))
+		return fmt.Sprintf("#%02x%02x%02x", r, g, b)
 	}
-	return fmt.Sprintf("#%02x%02x%02x%02x", uint8(col.R*255.0+0.5), uint8(col.G*255.0+0.5), uint8(col.B*255.0+0.5), uint8(col.A*255.0+0.5))
+	return fmt.Sprintf("#%02x%02x%02x%02x", r, g, b, a)
 }
 
 func (col RepaColor) String() string {
@@ -57,10 +73,11 @@ func (col RepaColor) String() string {
 }
 
 func (col RepaColor) RgbString() string {
+	r, g, b := col.RGB256()
 	if (col.A == 1) {
-		return fmt.Sprintf("rgb(%d %d %d)", uint8(col.R*255.0+0.5), uint8(col.G*255.0+0.5), uint8(col.B*255.0+0.5))
+		return fmt.Sprintf("rgb(%d %d %d)", r, g, b)
 	}
-	return fmt.Sprintf("rgb(%d %d %d / %s)", uint8(col.R*255.0+0.5), uint8(col.G*255.0+0.5), uint8(col.B*255.0+0.5), formatFloat(col.A))
+	return fmt.Sprintf("rgb(%d %d %d / %s)", r, g, b, formatFloat(col.A))
 }
 
 func (col RepaColor) HslString() string {
@@ -132,6 +149,17 @@ func (col RepaColor) A11YPair() RepaColor {
 	return WHITE
 }
 
+func (col RepaColor) AnsiFg() string {
+	r, g, b := col.RGB256()
+	return fmt.Sprintf("\033[38;2;%d;%d;%d;1m", r, g, b)
+}
+
+func (col RepaColor) AnsiBg() string {
+	r, g, b := col.RGB256()
+	pr, pg, pb := col.A11YPair().RGB256()
+	return fmt.Sprintf("\033[48;2;%d;%d;%d;38;2;%d;%d;%d;1m", r, g, b, pr, pg, pb)
+}
+
 // Blend two colors based on their alpha value 
 // `gamma` is the gamma correction value, default is 2.2
 func (col RepaColor) AlphaBlendRgb(c2 RepaColor, gamma float64) RepaColor {
@@ -139,7 +167,7 @@ func (col RepaColor) AlphaBlendRgb(c2 RepaColor, gamma float64) RepaColor {
 	a2 := c2.A
 	a := a1 + a2*(1-a1)
 	if a == 0 {
-		return NoColor
+		return NOCOLOR
 	}
 
 	if gamma == 0 {
