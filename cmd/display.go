@@ -129,6 +129,7 @@ Supported formats:
 		}
 
 		var repr string
+		var termrepr string
 
 		switch format {
 		case "hex":
@@ -147,18 +148,25 @@ Supported formats:
 			repr = c.OkLchString()
 		case "xyz":
 			repr = c.XyzString()
+		case "text":
+			termrepr = c.Hex()
+		case "ansi":
+			termrepr = renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
 		default:
-			if isatty.IsTerminal(os.Stdout.Fd()) && !noansi {
-				fmt.Print(renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{})))
-				return
-			}
-			repr = c.Hex()
+			// TODO combine text with ansi
+			termrepr = renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
 		}
 
 		// Print the color
 		if isatty.IsTerminal(os.Stdout.Fd()) && !noansi {
-			fmt.Printf("%s%s\033[0m\n", c.AnsiBg(), repr)
+			if termrepr == "" {
+				termrepr = fmt.Sprintf("%s%s\033[0m\n", c.AnsiBg(), repr)
+			}
+			fmt.Print(termrepr)
 		} else {
+			if repr == "" {
+				repr = c.Hex()
+			}
 			fmt.Printf("%s\n", repr)
 		}
 	},
