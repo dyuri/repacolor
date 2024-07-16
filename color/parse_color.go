@@ -27,3 +27,7 @@ func ParseColor(cstr string, usefallback bool) (col RepaColor, err error) {
 
 	return
 }
+
+func GetName(col RepaColor) (string, bool) {
+	return csscolorparser.Color{R: col.R, G: col.G, B: col.B, A: col.A}.Name()
+}

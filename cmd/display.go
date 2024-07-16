@@ -112,6 +112,36 @@ func getColorAnsiImage(c color.RepaColor, options ColorAnsiImageOptions) image.I
 	return img
 }
 
+func textColorDetails(c color.RepaColor) string {
+	nameStr, hasName := color.GetName(c)
+
+	if hasName {
+		nameStr = fmt.Sprintf("Name:  %s\n", nameStr)
+	}
+
+	return fmt.Sprintf("%sHex:   %s\nRGB:   %s\nHSL:   %s\nLAB:   %s\nLCH:   %s\nOKLAB: %s\nOKLCH: %s\n", nameStr, c.Hex(), c.RgbString(), c.HslString(), c.LabString(), c.LchString(), c.OkLabString(), c.OkLchString())
+}
+
+func mergeStringsVertically(a, b string) string {
+	la := strings.Split(a, "\n")
+	lb := strings.Split(b, "\n")
+	// la = la[:len(la)-1]
+	// lb = lb[:len(lb)-1]
+
+	if len(la) < len(lb) {
+		la = append(la, make([]string, len(lb)-len(la))...)
+	} else if len(lb) < len(la) {
+		lb = append(lb, make([]string, len(la)-len(lb))...)
+	}
+
+	var sb strings.Builder
+	for i := 0; i < len(la); i++ {
+		sb.WriteString(fmt.Sprintf("%s %s\n", la[i], lb[i]))
+	}
+
+	return sb.String()
+}
+
 // displayCmd represents the display command
 var displayCmd = &cobra.Command{
 	Use:   "display <color>",
@@ -149,12 +179,14 @@ Supported formats:
 		case "xyz":
 			repr = c.XyzString()
 		case "text":
-			termrepr = c.Hex()
+			termrepr = textColorDetails(c)
 		case "ansi":
 			termrepr = renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
 		default:
-			// TODO combine text with ansi
-			termrepr = renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
+			ansirepr := renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
+			textrepr := "\n" + textColorDetails(c)
+
+			termrepr = mergeStringsVertically(ansirepr, textrepr)
 		}
 
 		// Print the color
