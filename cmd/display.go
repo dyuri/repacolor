@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"image"
 	"log"
@@ -136,7 +137,10 @@ func mergeStringsVertically(a, b string) string {
 
 	var sb strings.Builder
 	for i := 0; i < len(la); i++ {
-		sb.WriteString(fmt.Sprintf("%s %s\n", la[i], lb[i]))
+		sb.WriteString(fmt.Sprintf("%s %s", la[i], lb[i]))
+		if (i < len(la) - 1) {
+			sb.WriteString("\n")
+		}
 	}
 
 	return sb.String()
@@ -145,7 +149,6 @@ func mergeStringsVertically(a, b string) string {
 // displayCmd represents the display command
 var displayCmd = &cobra.Command{
 	Use:   "display <color>",
-	Args: cobra.ExactArgs(1),
 	Short: "Display a color in the terminal",
 	Long: `Display a color in the terminal.
 
@@ -153,53 +156,65 @@ Supported formats:
 - Hexadecimal: #RRGGBB
 - RGB: rgb(R G B [/ A]) or rgb(R, G, B, A)`,
 	Run: func(cmd *cobra.Command, args []string) {
-		c, err := color.ParseColor(args[0], !nofallback)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		var repr string
-		var termrepr string
-
-		switch format {
-		case "hex":
-			repr = c.Hex()
-		case "rgb", "rgba":
-			repr = c.RgbString()
-		case "hsl", "hsla":
-			repr = c.HslString()
-		case "lab":
-			repr = c.LabString()
-		case "lch":
-			repr = c.LchString()
-		case "oklab":
-			repr = c.OkLabString()
-		case "oklch":
-			repr = c.OkLchString()
-		case "xyz":
-			repr = c.XyzString()
-		case "text":
-			termrepr = textColorDetails(c)
-		case "ansi":
-			termrepr = renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
-		default:
-			ansirepr := renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
-			textrepr := "\n" + textColorDetails(c)
-
-			termrepr = mergeStringsVertically(ansirepr, textrepr)
-		}
-
-		// Print the color
-		if isatty.IsTerminal(os.Stdout.Fd()) && !noansi {
-			if termrepr == "" {
-				termrepr = fmt.Sprintf("%s%s\033[0m\n", c.AnsiBg(), repr)
+		if len(args) == 0 {
+			// read from stdin
+			inputReader := cmd.InOrStdin()
+			scanner := bufio.NewScanner(inputReader)
+			for scanner.Scan() {
+				line := scanner.Text()
+				args = append(args, line)
 			}
-			fmt.Print(termrepr)
-		} else {
-			if repr == "" {
+		}
+		for _, arg := range args {
+			c, err := color.ParseColor(arg, !nofallback)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			var repr string
+			var termrepr string
+
+			switch format {
+			case "hex":
 				repr = c.Hex()
+			case "rgb", "rgba":
+				repr = c.RgbString()
+			case "hsl", "hsla":
+				repr = c.HslString()
+			case "lab":
+				repr = c.LabString()
+			case "lch":
+				repr = c.LchString()
+			case "oklab":
+				repr = c.OkLabString()
+			case "oklch":
+				repr = c.OkLchString()
+			case "xyz":
+				repr = c.XyzString()
+			case "text":
+				termrepr = textColorDetails(c)
+			case "ansi":
+				termrepr = renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
+			default:
+				ansirepr := renderAnsiImage(getColorAnsiImage(c, ColorAnsiImageOptions{}))
+				textrepr := "\n" + textColorDetails(c)
+
+				termrepr = mergeStringsVertically(ansirepr, textrepr)
 			}
-			fmt.Printf("%s\n", repr)
+
+			// Print the color
+			if isatty.IsTerminal(os.Stdout.Fd()) && !noansi {
+				if termrepr == "" {
+					termrepr = fmt.Sprintf("%s%s\033[0m\n", c.AnsiBg(), repr)
+				}
+				fmt.Print(termrepr)
+			} else {
+				if repr == "" {
+					repr = c.Hex()
+				}
+				fmt.Printf("%s\n", repr)
+			}
 		}
 	},
 }
