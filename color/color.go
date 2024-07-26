@@ -37,6 +37,30 @@ func formatFloat(f float64) string {
 	return fmt.Sprintf("%.4g", f)
 }
 
+func CreateColor(mode string, v1, v2, v3, a float64) RepaColor {
+	switch mode {
+	case "rgb":
+		return RepaColor{colorful.Color{R: v1, G: v2, B: v3}, a}
+	case "hsl":
+		return RepaColor{colorful.Hsl(v1, v2, v3), a}
+	case "lab":
+		return RepaColor{colorful.Lab(v1, v2, v3), a}
+	case "lch":
+		return RepaColor{colorful.Hcl(v3, v2, v1), a}
+	case "hcl":
+		return RepaColor{colorful.Hcl(v1, v2, v3), a}
+	case "oklab":
+		return RepaColor{colorful.OkLab(v1, v2, v3), a}
+	case "oklch":
+		return RepaColor{colorful.OkLch(v1, v2, v3), a}
+	case "xyz":
+		return RepaColor{colorful.Xyz(v1, v2, v3), a}
+	}
+
+	// use rgb as fallback
+	return RepaColor{colorful.Color{R: v1, G: v2, B: v3}, a}
+}
+
 func (col RepaColor) RGBA() (r, g, b, a uint32) {
 	r = uint32(col.A*col.R*0xffff + 0.5)
 	g = uint32(col.A*col.G*0xffff + 0.5)
