@@ -20,6 +20,8 @@ var GRAY = RepaColor{colorful.Color{R: .5, G: .5, B: .5}, 1}
 var DARKGRAY = RepaColor{colorful.Color{R: .25, G: .25, B: .25}, 1}
 var LIGHTGRAY = RepaColor{colorful.Color{R: .75, G: .75, B: .75}, 1}
 
+var ANSI_RESET = "\033[0m"
+
 const Delta = colorful.Delta
 
 func almosteq_eps(a, b, eps float64) bool {

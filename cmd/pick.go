@@ -5,15 +5,12 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/dyuri/repacolor/color"
 	"github.com/dyuri/repacolor/picker"
 )
 
-var mode string
-var useAlpha bool
+var showAlpha bool
 
 // pickCmd represents the pick command
 var pickCmd = &cobra.Command{
@@ -27,14 +24,12 @@ var pickCmd = &cobra.Command{
 			c, _ = color.ParseColor(args[0], true)
 		}
 
-		fmt.Printf("pick called, mode: %s, color: %s\n", mode, c.Hex())
-		picker.RunPicker(c)
+		picker.RunPicker(c, showAlpha)
 	},
 }
 
 func init() {
-	displayCmd.Flags().StringVarP(&mode, "mode", "m", "rgb", "Output format (rgb, hsl, lab, lch, oklab, oklch)")
-	displayCmd.Flags().BoolVarP(&useAlpha, "alpha", "a", false, "Use alpha channel")
+	pickCmd.Flags().BoolVarP(&showAlpha, "alpha", "a", false, "Show alpha channel")
 
 	rootCmd.AddCommand(pickCmd)
 }
