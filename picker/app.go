@@ -11,6 +11,9 @@ import (
 	"github.com/dyuri/repacolor/display"
 )
 
+const SLIDER_LGAP = 4
+const SLIDER_RGAP = 1
+
 type model struct {
 	components []string
 	values     []float64
@@ -18,8 +21,34 @@ type model struct {
 	color      color.RepaColor
 	width      int
 	height     int
-	me         tea.MouseEvent
+	step	   float64
 }
+
+func getSliderWidth(width int) int {
+	return width - SLIDER_LGAP - SLIDER_RGAP - 1
+}
+
+func mousePick(x, y int, m model) model {
+	if y >= len(m.components) || x < SLIDER_LGAP || x > SLIDER_LGAP + getSliderWidth(m.width) {
+		return m
+	}
+
+	v := float64(x - SLIDER_LGAP) / float64(getSliderWidth(m.width))
+	m.values[y] = v
+
+	return m
+}
+
+func mouseWheel(y int, change float64, m model) model {
+	if y >= len(m.components) {
+		return m
+	}
+
+	m.values[y] += change
+
+	return m
+}
+
 
 func initialModel(c color.RepaColor, showAlpha bool) model {
 	components := []string{
@@ -47,8 +76,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		m.step = 1.0 / float64(getSliderWidth(m.width))
 	case tea.MouseMsg:
-		m.me = tea.MouseEvent(msg)
+		e := tea.MouseEvent(msg)
+		switch e.Button {
+		case tea.MouseButtonLeft:
+			m = mousePick(e.X, e.Y, m)
+		case tea.MouseButtonWheelUp:
+			m = mouseWheel(e.Y, m.step, m)
+		case tea.MouseButtonWheelDown:
+			m = mouseWheel(e.Y, -m.step, m)
+		}
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
@@ -64,35 +102,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = len(m.components) - 1
 			}
 		case "h", "left":
-			m.values[m.cursor] -= 0.1
-			if m.values[m.cursor] < 0 {
-				m.values[m.cursor] = 0
-			}
+			m.values[m.cursor] -= m.step
 		case "H", "shift+left":
-			m.values[m.cursor] -= 0.01
-			if m.values[m.cursor] < 0 {
-				m.values[m.cursor] = 0
-			}
+			m.values[m.cursor] -= m.step / 10
 		case "l", "right":
-			m.values[m.cursor] += 0.1
-			if m.values[m.cursor] > 1 {
-				m.values[m.cursor] = 1
-			}
+			m.values[m.cursor] += m.step
 		case "L", "shift+right":
-			m.values[m.cursor] += 0.01
-			if m.values[m.cursor] > 1 {
-				m.values[m.cursor] = 1
-			}
+			m.values[m.cursor] += m.step / 10
 		}
 	}
 
+	for i := 0; i < len(m.values); i++ {
+		if m.values[i] < 0 {
+			m.values[i] = 0
+		} else if m.values[i] > 1 {
+			m.values[i] = 1
+		}
+	}
 	m.color = color.CreateColor("rgb", m.values[0], m.values[1], m.values[2], m.values[3])
 
 	return m, nil
 }
 
 func drawSlider(m model, i int) string {
-	w := m.width - 6
+	w := getSliderWidth(m.width)
 	value := m.values[i]
 	slider := strings.Builder{}
 
@@ -140,12 +173,14 @@ func (m model) View() string {
 		s += fmt.Sprintf("%c %c %s\n", cursor, choice[0], value)
 	}
 
-	ansirepr := display.RenderAnsiImage(display.GetColorAnsiImage(m.color, display.ColorAnsiImageOptions{}))
-	textrepr := "\n" + display.TextColorDetails(m.color)
+	if m.height >= 16 {
+		ansirepr := display.RenderAnsiImage(display.GetColorAnsiImage(m.color, display.ColorAnsiImageOptions{}))
+		textrepr := "\n" + display.TextColorDetails(m.color)
 
-	s += display.MergeStringsVertically(ansirepr, textrepr)
-
-	s += fmt.Sprintf("mouse: %d, %d, %s", m.me.X, m.me.Y, m.me)
+		s += display.MergeStringsVertically(ansirepr, textrepr)
+	} else if m.height >= 5 {
+		s += "\n" + m.color.AnsiBg() + m.color.A11YPair().AnsiFg() + m.color.Hex() + color.ANSI_RESET + "\n"
+	}
 
 	return s
 }
@@ -158,7 +193,7 @@ func RunPicker(c color.RepaColor, showAlpha bool) {
 		os.Exit(1)
 	}
 
-	// TODO display as it should
+	// TODO display it as requested (hex by default)
 	fmt.Println(m.(model).color.Hex())
 }
 
