@@ -1,11 +1,23 @@
 package picker
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/ssh"
+	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/activeterm"
+	"github.com/charmbracelet/wish/bubbletea"
+	"github.com/charmbracelet/wish/logging"
 
 	"github.com/dyuri/repacolor/color"
 	"github.com/dyuri/repacolor/display"
@@ -195,5 +207,51 @@ func RunPicker(c color.RepaColor, showAlpha bool) {
 
 	// TODO display it as requested (hex by default)
 	fmt.Println(m.(model).color.Hex())
+}
+
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+	args := s.Command()
+	c := color.WHITE
+	if len(args) > 0 {
+		pc, err := color.ParseColor(args[0], true)
+		if err != nil {
+			log.Error("Could not parse color", "error", err)
+		} else {
+			c = pc
+		}
+	}
+
+	return initialModel(c, false), []tea.ProgramOption{tea.WithMouseAllMotion(), tea.WithAltScreen()}
+}
+
+func ServePicker(port string) {
+	s, err := wish.NewServer(
+		wish.WithAddress(net.JoinHostPort("0.0.0.0", port)),
+		wish.WithHostKeyPath(".ssh/id_ed25519"),
+		wish.WithMiddleware(
+			bubbletea.Middleware(teaHandler),
+			activeterm.Middleware(),
+			logging.Middleware(),
+		),
+	)
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	log.Info("Starting server", "port", port)
+	go func() {
+		if err = s.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
+			log.Error("Server error", "error", err)
+			done <- nil
+		}
+	}()
+
+	<-done
+	log.Info("Shutting down server")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err = s.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
+		log.Error("Could not gracefully shutdown server", "error", err)
+	}
 }
 
