@@ -9,4 +9,4 @@ CLI tool for colors - WIP
 - ssh server for color picker
   `repacolor serve`
 
-![ssh example](./term.svg)
+![ssh example](./ssh_demo.svg)
