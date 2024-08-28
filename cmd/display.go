@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+  "strings"
 
 	"github.com/spf13/cobra"
 	"github.com/mattn/go-isatty"
@@ -22,9 +23,20 @@ var displayCmd = &cobra.Command{
 	Short: "Display a color in the terminal",
 	Long: `Display a color in the terminal.
 
-Supported formats:
-- Hexadecimal: #RRGGBB
-- RGB: rgb(R G B [/ A]) or rgb(R, G, B, A)`,
+Supported input formats:
+- Hex: #RRGGBB
+- RGB: rgb(R G B [/ A])
+- HSL: hsl(H S% L% [/ A])
+
+Supported output formats:
+- Hex
+- RGB
+- HSL
+- LAB
+- LCH
+- OKLAB
+- OKLCH
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			// read from stdin
@@ -45,7 +57,7 @@ Supported formats:
 			var repr string
 			var termrepr string
 
-			switch format {
+			switch strings.ToLower(format) {
 			case "hex":
 				repr = c.Hex()
 			case "rgb", "rgba":
@@ -70,7 +82,7 @@ Supported formats:
 				ansirepr := display.RenderAnsiImage(display.GetColorAnsiImage(c, display.ColorAnsiImageOptions{}))
 				textrepr := "\n" + display.TextColorDetails(c)
 
-				termrepr = display.MergeStringsVertically(ansirepr, textrepr)
+				termrepr = display.MergeStringsVertically(ansirepr, textrepr, 24)
 			}
 
 			// Print the color

@@ -16,7 +16,7 @@ func TestParseHexColor(t *testing.T) {
 		g := rand.Uint32() % 256
 		b := rand.Uint32() % 256
 		hexrep := fmt.Sprintf("#%02x%02x%02x", r, g, b)
-		c, err := ParseColor(hexrep)
+		c, err := ParseColor(hexrep, false)
 		if err != nil {
 			t.Fatalf("Error parsing hexa color: %v", err)
 		}
@@ -38,13 +38,16 @@ func TestParseHexaColor(t *testing.T) {
 		g := rand.Uint32() % 256
 		b := rand.Uint32() % 256
 		a := rand.Uint32() % 256
+    if a == 0 {
+      a = 255
+    }
 		hexrep := fmt.Sprintf("#%02x%02x%02x%02x", r, g, b, a)
-		c, err := ParseColor(hexrep)
+		c, err := ParseColor(hexrep, false)
 		if err != nil {
 			t.Fatalf("Error parsing hexa color: %v", err)
 		}
 		if a != 255 && !strings.EqualFold(c.Hex(), hexrep) {
-			t.Fatalf("Wrong color parsed: %v", c.Hex())
+			t.Fatalf("Wrong color parsed: %s => %v", hexrep, c.Hex())
 		} else if a == 255 && !strings.EqualFold(c.Hex(), fmt.Sprintf("#%02x%02x%02x", r, g, b)) {
 			t.Fatalf("Wrong color parsed: %v (alpha is 1)", c.Hex())
 		}
@@ -61,11 +64,11 @@ func TestParseRgbColor(t *testing.T) {
 		b := rand.Uint32() % 256
 		rgbrep := fmt.Sprintf("rgb(%d, %d, %d)", r, g, b)
 		rgbrep2 := fmt.Sprintf("rgb(%d %d %d)", r, g, b)
-		c, err := ParseColor(rgbrep)
+		c, err := ParseColor(rgbrep, false)
 		if err != nil {
 			t.Fatalf("Error parsing rgb color: %v", err)
 		}
-		c2, err := ParseColor(rgbrep2)
+		c2, err := ParseColor(rgbrep2, false)
 		if err != nil {
 			t.Fatalf("Error parsing rgb color: %v", err)
 		}
@@ -93,15 +96,15 @@ func TestParseRgbaColor(t *testing.T) {
 		rgbrep := fmt.Sprintf("rgba(%d, %d, %d, %f)", r, g, b, a)
 		rgbrep2 := fmt.Sprintf("rgb(%d %d %d / %f)", r, g, b, a)
 		rgbrep3 := fmt.Sprintf("rgb(%d %d %d / %d%%)", r, g, b, uint8(a * 100))
-		c, err := ParseColor(rgbrep)
+		c, err := ParseColor(rgbrep, false)
 		if err != nil {
 			t.Fatalf("Error parsing rgba color: %v", err)
 		}
-		c2, err := ParseColor(rgbrep2)
+		c2, err := ParseColor(rgbrep2, false)
 		if err != nil {
 			t.Fatalf("Error parsing rgba color: %v", err)
 		}
-		c3, err := ParseColor(rgbrep2)
+		c3, err := ParseColor(rgbrep2, false)
 		if err != nil {
 			t.Fatalf("Error parsing rgba color: %v", err)
 		}

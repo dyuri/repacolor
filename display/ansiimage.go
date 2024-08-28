@@ -36,7 +36,9 @@ func RenderAnsiImage(img image.Image) string {
 
 		}
 
-		sb.WriteString("\n")
+    if y + 2 < height {
+      sb.WriteString("\n")
+    }
 	}
 
 	return sb.String()
@@ -76,8 +78,8 @@ func GetColorAnsiImage(c color.RepaColor, options ColorAnsiImageOptions) image.I
 	mp := options.Margin + options.Padding
 
 	img := image.NewRGBA(image.Rect(0, 0, fullwidth, fullheight))
-	for i := 0; i < fullheight; i++ {
-		for j := 0; j < fullwidth; j++ {
+	for j := 0; j < fullheight; j++ {
+		for i := 0; i < fullwidth; i++ {
 			pixel := color.NOCOLOR
 			if i >= options.Margin && i < fullheight - options.Margin && j >= options.Margin && j < fullwidth - options.Margin {
 				pixel = options.Background1
@@ -95,6 +97,61 @@ func GetColorAnsiImage(c color.RepaColor, options ColorAnsiImageOptions) image.I
 				co := c
 				co.A = 1.0
 				pixel = co.AlphaBlendRgb(pixel, 2.2)
+			}
+			img.Set(i, j, pixel)
+		}
+	}
+
+	return img
+}
+
+func GetCompareAnsiImage(c1, c2 color.RepaColor, options ColorAnsiImageOptions) image.Image {
+	if (options.Width == 0) {
+		options.Width = 16
+	}
+	if (options.Height == 0) {
+		options.Height = 16
+	}
+	if (options.Margin == 0) {
+		options.Margin = 2
+	}
+	if (options.Padding == 0) {
+		options.Padding = 2
+	}
+	if (options.Background1 == color.NOCOLOR) {
+		options.Background1 = color.LIGHTGRAY
+	}
+	if (options.Background2 == color.NOCOLOR) {
+		options.Background2 = color.DARKGRAY
+	}
+
+	fullwidth := options.Width + 2 * options.Margin + 2 * options.Padding
+	fullheight := options.Height + 2 * options.Margin + 2 * options.Padding
+	mp := options.Margin + options.Padding
+
+	img := image.NewRGBA(image.Rect(0, 0, fullwidth, fullheight))
+	for i := 0; i < fullheight; i++ {
+		for j := 0; j < fullwidth; j++ {
+			pixel := color.NOCOLOR
+			if i >= options.Margin && i < fullheight - options.Margin && j >= options.Margin && j < fullwidth - options.Margin {
+				pixel = options.Background1
+				if (i+j)%2 != 0 {
+					pixel = options.Background2
+				}
+			}
+
+      c := c1
+      if i >= mp && i >= fullwidth / 2 {
+        c = c2
+      }
+
+      if j >= mp && j < fullheight - mp && i >= mp && i < fullwidth - mp {
+        pixel = c.AlphaBlendRgb(pixel, 2.2)
+        if j >= fullheight / 2 && j < fullheight - mp {
+          co := c
+          co.A = 1.0
+          pixel = co.AlphaBlendRgb(pixel, 2.2)
+        }
 			}
 			img.Set(i, j, pixel)
 		}

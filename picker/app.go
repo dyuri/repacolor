@@ -189,7 +189,7 @@ func (m model) View() string {
 		ansirepr := display.RenderAnsiImage(display.GetColorAnsiImage(m.color, display.ColorAnsiImageOptions{}))
 		textrepr := "\n" + display.TextColorDetails(m.color)
 
-		s += display.MergeStringsVertically(ansirepr, textrepr)
+		s += display.MergeStringsVertically(ansirepr, textrepr, 24)
 	} else if m.height >= 5 {
 		s += "\n" + m.color.AnsiBg() + m.color.A11YPair().AnsiFg() + m.color.Hex() + color.ANSI_RESET + "\n"
 	}

@@ -8,18 +8,25 @@ import (
 )
 
 func TextColorDetails(c color.RepaColor) string {
-	nameStr, hasName := color.GetName(c)
+	nameStr, _ := color.GetName(c)
 
-	if hasName {
-		nameStr = fmt.Sprintf("Name:  %s\n", nameStr)
-	}
-
-	return fmt.Sprintf("%sHex:   %s\nRGB:   %s\nHSL:   %s\nLAB:   %s\nLCH:   %s\nOKLAB: %s\nOKLCH: %s\n", nameStr, c.Hex(), c.RgbString(), c.HslString(), c.LabString(), c.LchString(), c.OkLabString(), c.OkLchString())
+	return fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", nameStr, c.Hex(), c.RgbString(), c.HslString(), c.LabString(), c.LchString(), c.OkLabString(), c.OkLchString())
 }
 
-func MergeStringsVertically(a, b string) string {
+func MergeStringsVertically(a, b string, width int) string {
 	la := strings.Split(a, "\n")
 	lb := strings.Split(b, "\n")
+
+  if width == 0 {
+    maxwidth := 0
+
+    for _, s := range la {
+      if len(s) > maxwidth {
+        maxwidth = len(s)
+      }
+    }
+    width = maxwidth
+  }
 
 	if len(la) < len(lb) {
 		la = append(la, make([]string, len(lb)-len(la))...)
@@ -29,7 +36,11 @@ func MergeStringsVertically(a, b string) string {
 
 	var sb strings.Builder
 	for i := 0; i < len(la); i++ {
-		sb.WriteString(fmt.Sprintf("%s %s", la[i], lb[i]))
+    padding := width - len(la[i])
+    if padding < 0 {
+      padding = 0
+    }
+		sb.WriteString(fmt.Sprintf("%s%s %s", la[i], strings.Repeat(" ", padding), lb[i]))
 		if (i < len(la) - 1) {
 			sb.WriteString("\n")
 		}
