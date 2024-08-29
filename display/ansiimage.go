@@ -160,3 +160,13 @@ func GetCompareAnsiImage(c1, c2 color.RepaColor, options ColorAnsiImageOptions) 
 	return img
 }
 
+func AnsiGradient(c1, c2 color.RepaColor, width, mode int) string {
+	var sb strings.Builder
+	for i := 0; i < width; i++ {
+		c := c1.Blend(c2, float64(i) / float64(width), mode, false)
+		sb.WriteString(c.AnsiBg())
+		sb.WriteString(" ")
+	}
+	sb.WriteString(color.ANSI_RESET)
+	return sb.String()
+}

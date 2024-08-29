@@ -13,6 +13,17 @@ type RepaColor struct {
 	A float64
 }
 
+const (
+	BLEND_RGB = iota
+	BLEND_LINEARRGB = iota
+	BLEND_HSV = iota
+	BLEND_LAB = iota
+	BLEND_LCH = iota
+	BLEND_OKLAB = iota
+	BLEND_OKLCH = iota
+	BLEND_XYZ = iota
+)
+
 var NOCOLOR = RepaColor{}
 var BLACK = RepaColor{colorful.Color{R: 0, G: 0, B: 0}, 1}
 var WHITE = RepaColor{colorful.Color{R: 1, G: 1, B: 1}, 1}
@@ -208,6 +219,43 @@ func (col RepaColor) AlphaBlendRgb(c2 RepaColor, gamma float64) RepaColor {
 		},
 		a,
 	}
+}
+
+func (col RepaColor) Blend(c2 RepaColor, fraction float64, mode int, useAlpha bool) RepaColor {
+	retcol := col
+
+	switch mode {
+	case BLEND_RGB:
+		retcol = MakeColor(col.BlendRgb(c2.Color, fraction))
+	case BLEND_LINEARRGB:
+		retcol = MakeColor(col.BlendLinearRgb(c2.Color, fraction))
+	case BLEND_HSV:
+		retcol = MakeColor(col.BlendHsv(c2.Color, fraction))
+	case BLEND_LAB:
+		l1, a1, b1 := col.Lab()
+		l2, a2, b2 := c2.Lab()
+		retcol = MakeColor(colorful.Lab(l1 + (l2-l1)*fraction, a1 + (a2-a1)*fraction, b1 + (b2-b1)*fraction))
+	case BLEND_LCH:
+		retcol = MakeColor(col.BlendHcl(c2.Color, fraction))
+	case BLEND_OKLAB:
+		l1, a1, b1 := col.OkLab()
+		l2, a2, b2 := c2.OkLab()
+		retcol = MakeColor(colorful.OkLab(l1 + (l2-l1)*fraction, a1 + (a2-a1)*fraction, b1 + (b2-b1)*fraction))
+	case BLEND_OKLCH:
+		l1, a1, b1 := col.OkLch()
+		l2, a2, b2 := c2.OkLch()
+		retcol = MakeColor(colorful.OkLch(l1 + (l2-l1)*fraction, a1 + (a2-a1)*fraction, b1 + (b2-b1)*fraction))
+	case BLEND_XYZ:
+		x1, y1, z1 := col.Xyz()
+		x2, y2, z2 := c2.Xyz()
+		retcol = MakeColor(colorful.Xyz(x1 + (x2-x1)*fraction, y1 + (y2-y1)*fraction, z1 + (z2-z1)*fraction))
+	}
+
+	if useAlpha {
+		retcol.A = col.A + (c2.A-col.A)*fraction
+	}
+
+	return retcol
 }
 
 func MakeColor(col color.Color) RepaColor {
