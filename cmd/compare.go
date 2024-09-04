@@ -82,10 +82,10 @@ For supported input formats, see the 'display' command.`,
 					color.BLEND_RGB,
 					color.BLEND_LINEARRGB,
 					color.BLEND_HSV,
-					// color.BLEND_LAB,
+					color.BLEND_LAB,
 					color.BLEND_LCH,
-					// color.BLEND_OKLAB,
-					// color.BLEND_OKLCH,
+					color.BLEND_OKLAB,
+					color.BLEND_OKLCH,
 					// color.BLEND_XYZ,
 				} {
 				grad := display.AnsiGradient(refcolor, c, terminalWidth - 4, mode)

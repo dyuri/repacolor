@@ -131,7 +131,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.values[i] = 1
 		}
 	}
-	m.color = color.CreateColor("rgb", m.values[0], m.values[1], m.values[2], m.values[3])
+	m.color = color.CreateColor(color.CS_RGB, m.values[0], m.values[1], m.values[2], m.values[3])
 
 	return m, nil
 }

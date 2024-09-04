@@ -14,14 +14,25 @@ type RepaColor struct {
 }
 
 const (
-	BLEND_RGB = iota
+	CS_RGB   = iota
+	CS_HSL   = iota
+	CS_LAB   = iota
+	CS_LCH   = iota
+	CS_HCL   = iota
+	CS_OKLAB = iota
+	CS_OKLCH = iota
+	CS_XYZ   = iota
+)
+
+const (
+	BLEND_RGB       = iota
 	BLEND_LINEARRGB = iota
-	BLEND_HSV = iota
-	BLEND_LAB = iota
-	BLEND_LCH = iota
-	BLEND_OKLAB = iota
-	BLEND_OKLCH = iota
-	BLEND_XYZ = iota
+	BLEND_HSV       = iota
+	BLEND_LAB       = iota
+	BLEND_LCH       = iota
+	BLEND_OKLAB     = iota
+	BLEND_OKLCH     = iota
+	BLEND_XYZ       = iota
 )
 
 var NOCOLOR = RepaColor{}
@@ -50,23 +61,23 @@ func formatFloat(f float64) string {
 	return fmt.Sprintf("%.4g", f)
 }
 
-func CreateColor(mode string, v1, v2, v3, a float64) RepaColor {
+func CreateColor(mode int, v1, v2, v3, a float64) RepaColor {
 	switch mode {
-	case "rgb":
+	case CS_RGB:
 		return RepaColor{colorful.Color{R: v1, G: v2, B: v3}, a}
-	case "hsl":
+	case CS_HSL:
 		return RepaColor{colorful.Hsl(v1, v2, v3), a}
-	case "lab":
+	case CS_LAB:
 		return RepaColor{colorful.Lab(v1, v2, v3), a}
-	case "lch":
+	case CS_LCH:
 		return RepaColor{colorful.Hcl(v3, v2, v1), a}
-	case "hcl":
+	case CS_HCL:
 		return RepaColor{colorful.Hcl(v1, v2, v3), a}
-	case "oklab":
+	case CS_OKLAB:
 		return RepaColor{colorful.OkLab(v1, v2, v3), a}
-	case "oklch":
+	case CS_OKLCH:
 		return RepaColor{colorful.OkLch(v1, v2, v3), a}
-	case "xyz":
+	case CS_XYZ:
 		return RepaColor{colorful.Xyz(v1, v2, v3), a}
 	}
 
@@ -111,7 +122,7 @@ func (col RepaColor) String() string {
 
 func (col RepaColor) RgbString() string {
 	r, g, b := col.RGB256()
-	if (col.A == 1) {
+	if col.A == 1 {
 		return fmt.Sprintf("rgb(%d %d %d)", r, g, b)
 	}
 	return fmt.Sprintf("rgb(%d %d %d / %s)", r, g, b, formatFloat(col.A))
@@ -119,7 +130,7 @@ func (col RepaColor) RgbString() string {
 
 func (col RepaColor) HslString() string {
 	h, s, l := col.Hsl()
-	if (col.A == 1) {
+	if col.A == 1 {
 		return fmt.Sprintf("hsl(%.3g %s%% %s%%)", h, formatFloat(s*100), formatFloat(l*100))
 	}
 	return fmt.Sprintf("hsl(%.3g %s%% %s%% / %s)", h, formatFloat(s*100), formatFloat(l*100), formatFloat(col.A))
@@ -127,7 +138,7 @@ func (col RepaColor) HslString() string {
 
 func (col RepaColor) LabString() string {
 	l, a, b := col.Lab()
-	if (col.A == 1) {
+	if col.A == 1 {
 		return fmt.Sprintf("lab(%s%% %s %s)", formatFloat(l*100), formatFloat(a*100), formatFloat(b*100))
 	}
 	return fmt.Sprintf("lab(%s%% %s %s / %s)", formatFloat(l*100), formatFloat(a*100), formatFloat(b*100), formatFloat(col.A))
@@ -135,7 +146,7 @@ func (col RepaColor) LabString() string {
 
 func (col RepaColor) LchString() string {
 	h, c, l := col.Hcl()
-	if (col.A == 1) {
+	if col.A == 1 {
 		return fmt.Sprintf("lch(%s%% %s %s)", formatFloat(l*100), formatFloat(c*100), formatFloat(h))
 	}
 	return fmt.Sprintf("lch(%s%% %s %s / %s)", formatFloat(l*100), formatFloat(c*100), formatFloat(h), formatFloat(col.A))
@@ -143,7 +154,7 @@ func (col RepaColor) LchString() string {
 
 func (col RepaColor) OkLabString() string {
 	l, a, b := col.OkLab()
-	if (col.A == 1) {
+	if col.A == 1 {
 		return fmt.Sprintf("oklab(%s%% %s %s)", formatFloat(l*100), formatFloat(a), formatFloat(b))
 	}
 	return fmt.Sprintf("oklab(%s%% %s %s / %s)", formatFloat(l*100), formatFloat(a), formatFloat(b), formatFloat(col.A))
@@ -151,7 +162,7 @@ func (col RepaColor) OkLabString() string {
 
 func (col RepaColor) OkLchString() string {
 	l, c, h := col.OkLch()
-	if (col.A == 1) {
+	if col.A == 1 {
 		return fmt.Sprintf("oklch(%s%% %s %s)", formatFloat(l*100), formatFloat(c), formatFloat(h))
 	}
 	return fmt.Sprintf("oklch(%s%% %s %s / %s)", formatFloat(l*100), formatFloat(c), formatFloat(h), formatFloat(col.A))
@@ -159,7 +170,7 @@ func (col RepaColor) OkLchString() string {
 
 func (col RepaColor) XyzString() string {
 	x, y, z := col.Xyz()
-	if (col.A == 1) {
+	if col.A == 1 {
 		return fmt.Sprintf("xyz(%.4g %.4g %.4g)", x, y, z)
 	}
 	return fmt.Sprintf("xyz(%.4g %.4g %.4g / %s)", x, y, z, formatFloat(col.A))
@@ -197,7 +208,7 @@ func (col RepaColor) AnsiBg() string {
 	return fmt.Sprintf("\033[48;2;%d;%d;%d;38;2;%d;%d;%d;1m", r, g, b, pr, pg, pb)
 }
 
-// Blend two colors based on their alpha value 
+// Blend two colors based on their alpha value
 // `gamma` is the gamma correction value, default is 2.2
 func (col RepaColor) AlphaBlendRgb(c2 RepaColor, gamma float64) RepaColor {
 	a1 := col.A
@@ -213,9 +224,9 @@ func (col RepaColor) AlphaBlendRgb(c2 RepaColor, gamma float64) RepaColor {
 
 	return RepaColor{
 		colorful.Color{
-			R: math.Pow(math.Pow(col.R, gamma)*a1 + math.Pow(c2.R, gamma)*a2*(1-a1), 1/gamma),
-			G: math.Pow(math.Pow(col.G, gamma)*a1 + math.Pow(c2.G, gamma)*a2*(1-a1), 1/gamma),
-			B: math.Pow(math.Pow(col.B, gamma)*a1 + math.Pow(c2.B, gamma)*a2*(1-a1), 1/gamma),
+			R: math.Pow(math.Pow(col.R, gamma)*a1+math.Pow(c2.R, gamma)*a2*(1-a1), 1/gamma),
+			G: math.Pow(math.Pow(col.G, gamma)*a1+math.Pow(c2.G, gamma)*a2*(1-a1), 1/gamma),
+			B: math.Pow(math.Pow(col.B, gamma)*a1+math.Pow(c2.B, gamma)*a2*(1-a1), 1/gamma),
 		},
 		a,
 	}
@@ -232,23 +243,21 @@ func (col RepaColor) Blend(c2 RepaColor, fraction float64, mode int, useAlpha bo
 	case BLEND_HSV:
 		retcol = MakeColor(col.BlendHsv(c2.Color, fraction))
 	case BLEND_LAB:
-		l1, a1, b1 := col.Lab()
-		l2, a2, b2 := c2.Lab()
-		retcol = MakeColor(colorful.Lab(l1 + (l2-l1)*fraction, a1 + (a2-a1)*fraction, b1 + (b2-b1)*fraction))
+		retcol = MakeColor(col.BlendLab(c2.Color, fraction).Clamped())
 	case BLEND_LCH:
-		retcol = MakeColor(col.BlendHcl(c2.Color, fraction))
+		retcol = MakeColor(col.BlendHcl(c2.Color, fraction).Clamped())
 	case BLEND_OKLAB:
 		l1, a1, b1 := col.OkLab()
 		l2, a2, b2 := c2.OkLab()
-		retcol = MakeColor(colorful.OkLab(l1 + (l2-l1)*fraction, a1 + (a2-a1)*fraction, b1 + (b2-b1)*fraction))
+		retcol = MakeColor(colorful.OkLab(l1+(l2-l1)*fraction, a1+(a2-a1)*fraction, b1+(b2-b1)*fraction).Clamped())
 	case BLEND_OKLCH:
 		l1, a1, b1 := col.OkLch()
 		l2, a2, b2 := c2.OkLch()
-		retcol = MakeColor(colorful.OkLch(l1 + (l2-l1)*fraction, a1 + (a2-a1)*fraction, b1 + (b2-b1)*fraction))
+		retcol = MakeColor(colorful.OkLch(l1+(l2-l1)*fraction, a1+(a2-a1)*fraction, b1+(b2-b1)*fraction).Clamped())
 	case BLEND_XYZ:
 		x1, y1, z1 := col.Xyz()
 		x2, y2, z2 := c2.Xyz()
-		retcol = MakeColor(colorful.Xyz(x1 + (x2-x1)*fraction, y1 + (y2-y1)*fraction, z1 + (z2-z1)*fraction))
+		retcol = MakeColor(colorful.Xyz(x1+(x2-x1)*fraction, y1+(y2-y1)*fraction, z1+(z2-z1)*fraction).Clamped())
 	}
 
 	if useAlpha {
