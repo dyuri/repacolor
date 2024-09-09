@@ -247,13 +247,9 @@ func (col RepaColor) Blend(c2 RepaColor, fraction float64, mode int, useAlpha bo
 	case BLEND_LCH:
 		retcol = MakeColor(col.BlendHcl(c2.Color, fraction).Clamped())
 	case BLEND_OKLAB:
-		l1, a1, b1 := col.OkLab()
-		l2, a2, b2 := c2.OkLab()
-		retcol = MakeColor(colorful.OkLab(l1+(l2-l1)*fraction, a1+(a2-a1)*fraction, b1+(b2-b1)*fraction).Clamped())
+		retcol = MakeColor(col.BlendOkLab(c2.Color, fraction).Clamped())
 	case BLEND_OKLCH:
-		l1, a1, b1 := col.OkLch()
-		l2, a2, b2 := c2.OkLch()
-		retcol = MakeColor(colorful.OkLch(l1+(l2-l1)*fraction, a1+(a2-a1)*fraction, b1+(b2-b1)*fraction).Clamped())
+		retcol = MakeColor(col.BlendOkLch(c2.Color, fraction).Clamped())
 	case BLEND_XYZ:
 		x1, y1, z1 := col.Xyz()
 		x2, y2, z2 := c2.Xyz()

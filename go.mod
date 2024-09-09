@@ -2,12 +2,14 @@ module github.com/dyuri/repacolor
 
 go 1.22.3
 
+replace github.com/lucasb-eyer/go-colorful => /home/dyuri/egyeb/go/go-colorful
+
 require (
 	github.com/charmbracelet/bubbletea v0.27.0
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/ssh v0.0.0-20240725163421-eb71b85b27aa
 	github.com/charmbracelet/wish v1.4.2
-	github.com/lucasb-eyer/go-colorful v1.2.1-0.20240305084139-fae0ace654d2
+	github.com/lucasb-eyer/go-colorful v1.2.1-0.20240820150456-e144b2c09f70
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mazznoer/csscolorparser v0.1.3
 	github.com/spf13/cobra v1.8.1

@@ -56,17 +56,8 @@ For supported input formats, see the 'display' command.`,
 			fmt.Print(termrepr)
 
 			// distances
-			fmt.Printf(`
-  Distance:
-  RGB:   %f
-  Lab:   %f
-  CIE76: %f
-  CIE94: %f
-  CIEDE: %f
-
-`,
+			fmt.Printf("\n  Distance:\n    RGB: %f CIE76: %f CIE94: %f CIEDE: %f\n\n",
 				refcolor.DistanceRgb(c.Color),
-				refcolor.DistanceLab(c.Color),
 				refcolor.DistanceCIE76(c.Color),
 				refcolor.DistanceCIE94(c.Color),
 				refcolor.DistanceCIEDE2000(c.Color),
@@ -83,8 +74,8 @@ For supported input formats, see the 'display' command.`,
 					color.BLEND_LINEARRGB,
 					color.BLEND_HSV,
 					color.BLEND_LAB,
-					color.BLEND_LCH,
 					color.BLEND_OKLAB,
+					color.BLEND_LCH,
 					color.BLEND_OKLCH,
 					// color.BLEND_XYZ,
 				} {
