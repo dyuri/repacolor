@@ -5,7 +5,6 @@ import (
 	"github.com/dyuri/repacolor/picker"
 )
 
-// pickCmd represents the pick command
 var serveCmd = &cobra.Command{
 	Use:   "serve [port]",
 	Args:  cobra.MaximumNArgs(1),
